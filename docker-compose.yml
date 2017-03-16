@@ -1,0 +1,94 @@
+version: '2'
+services:
+  sabnzbd:
+    image: linuxserver/sabnzbd
+    container_name: sabnzbd
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "9090:9090"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ:Europe/London
+    volumes:
+      - /docker/containers/sabnzbd/config:/config
+      - /media/Pool/downloads:/downloads
+
+  sonarr:
+    image: linuxserver/sonarr 
+    container_name: sonarr
+    restart: unless-stopped
+    depends_on:
+      - sabnzbd
+      - plex
+    links:
+      - sabnzbd
+      - plex
+    ports:
+      - "8989:8989"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ:Europe/London
+    volumes:
+      - /dev/rtc:/dev/rtc:ro
+      - /docker/containers/sonarr/config:/config
+      - /media/Pool/Series:/data/tv_shows
+      - /media/Pool/downloads/completed/TV:/downloads/completed/TV 
+
+  plex:
+    image: linuxserver/plex
+    restart: unless-stopped
+    container_name: plex
+    ports:
+      - 32400:32400/tcp
+      - 3005:3005/tcp
+      - 8324:8324/tcp
+      - 32469:32469/tcp
+      - 1900:1900/udp
+      - 32410:32410/udp
+      - 32412:32412/udp
+      - 32413:32413/udp
+      - 32414:32414/udp
+    environment:
+      - VERSION=latest
+      - PUID=1000
+      - PGID=1000
+      - TZ:Europe/London
+    volumes:
+      - /docker/containers/plex/config:/config
+      - /media/Pool/Series:/data/tvshows
+      - /media/Pool/Movies:/data/movies
+      - /media/Pool/Documentaries:/data/documentaries linuxserver/plex
+
+  couchpotato:
+    image: linuxserver/couchpotato 
+    container_name: couchpotato
+    restart: unless-stopped
+    depends_on:
+      - sabnzbd
+      - plex 
+    links:
+      - plex
+      - sabnzbd
+    ports:
+      - 5050:5050
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ:Europe/London
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /docker/containers/couchpotato/config:/config
+      - /media/Pool/downloads/completed/Movies:/downloads
+      - /media/Pool/Movies:/movies
+
+  watchtower:
+    image: v2tec/watchtower
+    container_name: watchtower
+    restart: unless-stopped
+    command: --cleanup
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
