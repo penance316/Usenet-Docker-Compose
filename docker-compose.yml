@@ -60,7 +60,7 @@ services:
       - /docker/containers/plex/config:/config
       - /media/Pool/Series:/data/tvshows
       - /media/Pool/Movies:/data/movies
-      - /media/Pool/Documentaries:/data/documentaries linuxserver/plex
+      - /media/Pool/Documentaries:/data/documentaries
 
   couchpotato:
     image: linuxserver/couchpotato 
